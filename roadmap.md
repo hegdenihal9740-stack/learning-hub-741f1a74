@@ -1,0 +1,20 @@
+# Roadmap
+
+- [x] Verify locally visible logos and front/rear student turns with upward and downward scrolling
+
+- [x] Add Feedback tab with course feedback, module shift requests and saved request history
+- [ ] Verify feedback submission using a real student account — blocked because there are no Cloud auth users yet
+
+- [ ] Add Google sign-in and email password recovery, including the reset-password page, using login-only Cloud accounts
+
+- [x] Add student profile photo upload, replacement and removal using the existing profile storage
+- [x] Add the uploaded Skill AI logo as a project asset and show it in the app (sign-in, sidebar, top bar, profile, leave letter)
+- [x] Remove the dead logo pointer that pointed at the old project (it 404s, so the logo was invisible)
+- [ ] Make the logo background transparent — show only the logo, no white box behind it (sign-in, sidebar chip, top bar, profile cover, leave letter)
+- [ ] Make the app say "Skill AI" only — no "Campusly" wording anywhere visible
+- [x] Dashboard design + animations
+- [x] Redesign the course roadmap page (hero with progress, module cards, completed-road glow, finish line; Module 1 at top)
+- [ ] Brighter, livelier course roadmap background (page + map board)
+- [ ] Student walks from the current module up to Module 10 when scrolling up; page slides to the current module on open
+- [x] Compact course roadmap cards: module name only, AI icon per module, floating/shine/glow animations
+- [x] Realistic, high-quality AI pictures (chip, brain, robot, chart, code, AI core) floating in the course roadmap background, keeping its colours
