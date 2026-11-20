@@ -1,0 +1,72 @@
+[
+ {
+  "capability": "code",
+  "source": "github hegdenihal9740-stack/learning-hub",
+  "outcome": "migrate",
+  "status": "done",
+  "next_action": "none"
+ },
+ {
+  "capability": "assets",
+  "source": "10 media files from previous project",
+  "outcome": "re-uploaded to this project",
+  "status": "done",
+  "next_action": "none"
+ },
+ {
+  "capability": "schema",
+  "source": "student_feedback table + RLS",
+  "outcome": "migrate",
+  "status": "done",
+  "next_action": "none"
+ },
+ {
+  "capability": "records",
+  "source": "student_feedback rows in previous Cloud",
+  "outcome": "migrate",
+  "status": "pending",
+  "next_action": "Ask user for feedback export, or skip"
+ },
+ {
+  "capability": "auth identities",
+  "source": "Cloud auth (email/password, Google), login-only",
+  "outcome": "migrate",
+  "status": "pending",
+  "next_action": "Email + Google enabled, sign-up disabled. Import students once exported, or staff add students under Users"
+ },
+ {
+  "capability": "authorization",
+  "source": "own-rows RLS on student_feedback",
+  "outcome": "migrate",
+  "status": "done",
+  "next_action": "Verify with a real student account"
+ },
+ {
+  "capability": "local device data",
+  "source": "profile, photo, batches in browser storage",
+  "outcome": "unchanged",
+  "status": "done",
+  "next_action": "none"
+ },
+ {
+  "capability": "public endpoints/webhooks/schedules",
+  "source": "none found",
+  "outcome": "n/a",
+  "status": "done",
+  "next_action": "none"
+ },
+ {
+  "capability": "secrets",
+  "source": ".env Cloud connection values only",
+  "outcome": "replaced by this project's Cloud",
+  "status": "done",
+  "next_action": "none"
+ },
+ {
+  "capability": "verification",
+  "source": "79 tests pass, sign-in page loads",
+  "outcome": "partial",
+  "status": "pending",
+  "next_action": "Signed-in feedback check needs a student account"
+ }
+]
