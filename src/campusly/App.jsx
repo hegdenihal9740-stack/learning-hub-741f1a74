@@ -62,6 +62,7 @@ import StudentProfile from './Profile.jsx'
 import CertificateRequest from './CertificateRequest.jsx'
 import Feedback from './Feedback.jsx'
 import HubDashboard from './HubDashboard.jsx'
+import SessionQuestMap from './SessionQuestMap.jsx'
 import Resume from './Resume.jsx'
 import BottomNav from './BottomNav.jsx'
 import { PortalNavigation, usePortalState, useResetNavigation, usePortalNavigationGuard } from './navigation.jsx'
@@ -71,23 +72,6 @@ import { sendPasswordReset } from './cloudAuth'
 import { RUNNER_SCROLL_IDLE_MS, shouldRunnerMove, getScrollDirection, getTravelHeading } from './roadmapRunnerMotion.js'
 
 const RoadmapStudent = lazy(() => import('./RoadmapStudent.jsx'))
-const roadmapAmbientIcons = [
-  { Icon: Cpu, top: 4, side: 'right', offset: 7, color: '#40dfff', size: 40 },
-  { Icon: BrainCircuit, top: 10, side: 'left', offset: 7, color: '#a376ff', size: 36 },
-  { Icon: Network, top: 17, side: 'right', offset: 18, color: '#7086ff', size: 30 },
-  { Icon: Sparkles, top: 23, side: 'left', offset: 19, color: '#42cfff', size: 28 },
-  { Icon: Database, top: 30, side: 'right', offset: 6, color: '#38caff', size: 34 },
-  { Icon: Activity, top: 37, side: 'left', offset: 6, color: '#a47bff', size: 32 },
-  { Icon: CodeXml, top: 43, side: 'right', offset: 19, color: '#8d75ff', size: 30 },
-  { Icon: Layers, top: 50, side: 'left', offset: 18, color: '#40dfff', size: 34 },
-  { Icon: ChartNoAxesColumn, top: 57, side: 'right', offset: 7, color: '#a376ff', size: 32 },
-  { Icon: CloudUpload, top: 63, side: 'left', offset: 7, color: '#42cfff', size: 36 },
-  { Icon: BrainCircuit, top: 70, side: 'right', offset: 18, color: '#7086ff', size: 30 },
-  { Icon: Cpu, top: 77, side: 'left', offset: 19, color: '#a47bff', size: 32 },
-  { Icon: Network, top: 83, side: 'right', offset: 6, color: '#40dfff', size: 34 },
-  { Icon: Sparkles, top: 89, side: 'left', offset: 6, color: '#8d75ff', size: 28 },
-  { Icon: Database, top: 95, side: 'right', offset: 19, color: '#38caff', size: 30 },
-]
 
 const navGroups = [
   { label: 'LEARNING', items: [
@@ -759,21 +743,6 @@ function buildModuleTrackPath(count, leftX = 260, rightX = 740, rowHeight = 340)
   return path
 }
 
-function buildSessionTrackPath(count, leftX = 360, rightX = 640, rowHeight = 174) {
-  if (!count) return ''
-  const nodes = Array.from({ length: count }, (_, index) => ({
-    x: index % 2 === 0 ? leftX : rightX,
-    y: index * rowHeight + rowHeight / 2 + 50,
-  }))
-  const centerX = (leftX + rightX) / 2
-  let path = `M ${nodes[0].x} ${nodes[0].y}`
-  nodes.slice(0, -1).forEach((start, index) => {
-    const end = nodes[index + 1]
-    const turnY = (start.y + end.y) / 2
-    path += ` L ${centerX} ${start.y} L ${centerX} ${turnY} L ${end.x} ${turnY} L ${end.x} ${end.y}`
-  })
-  return path
-}
 
 function Courses({ data, setPage }) {
   const [openModule, setOpenModule] = useState(null)
@@ -783,8 +752,6 @@ function Courses({ data, setPage }) {
   const [roadmapVisible, setRoadmapVisible] = useState(false)
   const roadmapMapRef = useRef(null)
   const roadmapRunnerRef = useRef(null)
-  const sessionMapRef = useRef(null)
-  const sessionTrackRef = useRef(null)
   const classTests = data.classTests || {}
   const moduleAssessments = data.moduleAssessments || {}
   const grandfatheredThroughModule = getClassTestGrandfatheredThrough(data)
@@ -834,7 +801,6 @@ function Courses({ data, setPage }) {
   }
   const selected = mods.find((c) => c.id === openModule)
   const selectedRoadmap = selected ? MODULE_ROADMAP[selected.id] : null
-  const sessionTrackPath = selected ? buildSessionTrackPath(selected.sessions.length) : ''
   const selectedMissingTests = selected && selected.id > grandfatheredThroughModule
     ? getMissingClassTestsForModule(selected, classTests)
     : []
@@ -850,69 +816,6 @@ function Courses({ data, setPage }) {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [openModule])
-
-  useEffect(() => {
-    const map = sessionMapRef.current
-    const track = sessionTrackRef.current
-    if (!map || !track || !selected) return
-
-    const revealTargets = map.querySelectorAll(
-      '.roadmap-journey-item, .roadmap-session-ambient-icon',
-    )
-    revealTargets.forEach((target) => target.classList.remove('journey-in-view'))
-
-    const prefersReducedMotion = window.matchMedia?.(
-      '(prefers-reduced-motion: reduce)',
-    ).matches
-    const observer = !prefersReducedMotion && typeof IntersectionObserver !== 'undefined'
-      ? new IntersectionObserver((entries, currentObserver) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('journey-in-view')
-            currentObserver.unobserve(entry.target)
-          }
-        })
-      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' })
-      : null
-
-    if (observer) {
-      revealTargets.forEach((target) => observer.observe(target))
-    } else {
-      revealTargets.forEach((target) => target.classList.add('journey-in-view'))
-    }
-
-    let frame = 0
-    const updateProgress = () => {
-      const mapRect = map.getBoundingClientRect()
-      const mapTop = window.scrollY + mapRect.top
-      const mapBottom = mapTop + mapRect.height
-      const start = mapTop - window.innerHeight * 0.78
-      const end = mapBottom - window.innerHeight * 0.52
-      const progress = prefersReducedMotion
-        ? 1
-        : Math.max(0, Math.min(1, (window.scrollY - start) / Math.max(1, end - start)))
-
-      track.style.setProperty('--roadmap-build-dashoffset', `${1000 * (1 - progress)}`)
-    }
-    const scheduleProgressUpdate = () => {
-      if (frame) return
-      frame = window.requestAnimationFrame(() => {
-        frame = 0
-        updateProgress()
-      })
-    }
-
-    window.addEventListener('scroll', scheduleProgressUpdate, { passive: true })
-    window.addEventListener('resize', scheduleProgressUpdate)
-    updateProgress()
-
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame)
-      observer?.disconnect()
-      window.removeEventListener('scroll', scheduleProgressUpdate)
-      window.removeEventListener('resize', scheduleProgressUpdate)
-    }
-  }, [openModule, selected?.id, selected?.sessions.length])
 
   useEffect(() => {
     const map = roadmapMapRef.current
@@ -1193,98 +1096,13 @@ function Courses({ data, setPage }) {
                 <span key={material.name}>{material.name}</span>))}</div>
           )}
     </div>
-    <div
-      ref={sessionMapRef}
-      className="roadmap-session-map roadmap-journey-map"
-      style={{ '--journey-step-height': '174px' }}
-    >
-      <div className="roadmap-session-ambient" aria-hidden="true">
-        {roadmapAmbientIcons.map(({ Icon, top, side, offset, color, size }, index) => (
-          <Icon
-            key={`${top}-${index}`}
-            className="roadmap-session-ambient-icon"
-            style={{ top: `${top}%`, [side]: `${offset}%`, color, width: size, height: size }}
-          />
-        ))}
-      </div>
-      <svg
-        ref={sessionTrackRef}
-        className="roadmap-session-track"
-        viewBox={`0 0 1000 ${selected.sessions.length * 174}`}
-        preserveAspectRatio="none"
-        aria-hidden="true"
-        style={{ '--roadmap-build-dashoffset': 1000 }}
-      >
-        <defs>
-          <linearGradient id="roadmap-session-ribbon-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#69ddf4"/>
-            <stop offset="48%" stopColor="#5689f5"/>
-            <stop offset="100%" stopColor="#e85cf4"/>
-          </linearGradient>
-        </defs>
-        <path className="roadmap-session-track-shadow" pathLength="1000" d={sessionTrackPath}/>
-        <path className="roadmap-session-track-rim" pathLength="1000" d={sessionTrackPath}/>
-        <path className="roadmap-session-track-base" pathLength="1000" d={sessionTrackPath}/>
-      </svg>
-      <div className="roadmap-session-direction" aria-hidden="true">
-        <span className="direction-chevron direction-chevron-cyan">
-          <ChevronRight/><ChevronRight/><ChevronRight/>
-        </span>
-        <span className="direction-chevron direction-chevron-violet">
-          <ChevronRight/><ChevronRight/><ChevronRight/>
-        </span>
-        <span className="direction-chevron direction-chevron-cyan">
-          <ChevronRight/><ChevronRight/><ChevronRight/>
-        </span>
-        <span className="direction-chevron direction-chevron-violet">
-          <ChevronRight/><ChevronRight/><ChevronRight/>
-        </span>
-      </div>
-      <ol className="roadmap-journey-list" aria-label={`Sessions in Module ${selected.id}`}>
-        {selected.sessions.map((session, index) => {
-          const isNextSession =
-            selected.state !== 'Completed' &&
-            session.num === selected.completed + 1
-          const sessionStatus = session.done ? 'Completed' : isNextSession ? 'Up next' : 'Available'
-          return (
-                <li
-            key={session.num}
-            className={cx('roadmap-journey-item', index % 2 === 1 && 'journey-copy-right', session.done && 'journey-completed', isNextSession && 'journey-current')}
-            style={{
-              '--journey-accent': roadmapAccents[(session.num - 1) % roadmapAccents.length],
-              '--journey-delay': `${Math.min(index, 20) * 30}ms`,
-            }}
-          >
-            <span className="roadmap-session-waypoint" aria-hidden="true"/>
-            <button
-              type="button"
-              className="roadmap-journey-trigger"
-              aria-label={`View session ${session.num}: ${session.topic.replace(/^Session \d+: /, '')} (${sessionStatus})`}
-              aria-haspopup="dialog"
-              onClick={() => setOpenSession({ ...session, status: sessionStatus })}
-            >
-              <span className="roadmap-journey-node" aria-hidden="true">
-                <span className="roadmap-journey-number">{String(session.num).padStart(2, '0')}</span>
-                {session.done && (
-                        <span className="roadmap-journey-complete"><Check size={11} strokeWidth={3}/></span>
-                      )}
-                {isNextSession && <span className="roadmap-journey-pulse"/>}
-              </span>
-              <span className="roadmap-journey-copy">
-                <span className="roadmap-journey-heading">
-                  <span className="roadmap-journey-text">
-                    <span className="roadmap-journey-kicker">
-                            SESSION {String(session.num).padStart(2, '0')} · {sessionStatus}</span>
-                    <strong className="roadmap-journey-title">{session.topic.replace(/^Session \d+: /, '')}</strong>
-                  </span>
-                </span>
-              </span>
-            </button>
-          </li>
-              )
-            })}
-      </ol>
-    </div>
+    <SessionQuestMap
+      moduleId={selected.id}
+      sessions={selected.sessions}
+      completed={selected.completed}
+      moduleState={selected.state}
+      onOpenSession={setOpenSession}
+    />
     {openSession && (
           <Modal title={`Session ${String(openSession.num).padStart(2, '0')}`} onClose={() => setOpenSession(null)} className="roadmap-session-detail-modal">
       <div className="roadmap-session-detail">
